@@ -11,44 +11,95 @@ class Event:
     def to_dict(self):
         return {"id": self.id, "title": self.title}
 
+
 # In-memory "database"
 events = [
     Event(1, "Tech Meetup"),
     Event(2, "Python Workshop")
 ]
 
-# TODO: Task 1 - Define the Problem
-# Create a new event from JSON input
+
+# Home route
+@app.route("/")
+def home():
+    return jsonify({"message": "Welcome to the Events API"})
+
+
+# Get all events
+@app.route("/events", methods=["GET"])
+def get_events():
+    return jsonify([event.to_dict() for event in events]), 200
+
+
+# Create a new event
 @app.route("/events", methods=["POST"])
 def create_event():
-    # TODO: Task 2 - Design and Develop the Code
 
-    # TODO: Task 3 - Implement the Loop and Process Each Element
+    # Get JSON data from the request
+    data = request.get_json()
 
-    # TODO: Task 4 - Return and Handle Results
-    pass
+    # Check if title is provided
+    if not data or "title" not in data or not data["title"].strip():
+        return jsonify({"error": "Title is required"}), 400
 
-# TODO: Task 1 - Define the Problem
-# Update the title of an existing event
+    # Generate a new ID
+    new_id = max([event.id for event in events], default=0) + 1
+
+    # Create a new event
+    new_event = Event(new_id, data["title"])
+
+    # Add event to the list
+    events.append(new_event)
+
+    # Return the created event
+    return jsonify(new_event.to_dict()), 201
+
+
+# Update an existing event
 @app.route("/events/<int:event_id>", methods=["PATCH"])
 def update_event(event_id):
-    # TODO: Task 2 - Design and Develop the Code
 
-    # TODO: Task 3 - Implement the Loop and Process Each Element
+    # Get JSON data
+    data = request.get_json()
 
-    # TODO: Task 4 - Return and Handle Results
-    pass
+    # Check if title is provided
+    if not data or "title" not in data or not data["title"].strip():
+        return jsonify({"error": "Title is required"}), 400
 
-# TODO: Task 1 - Define the Problem
-# Remove an event from the list
+    # Find the event
+    for event in events:
+
+        if event.id == event_id:
+
+            # Update the event title
+            event.title = data["title"]
+
+            # Return updated event
+            return jsonify(event.to_dict()), 200
+
+    # Event was not found
+    return jsonify({"error": "Event not found"}), 404
+
+
+# Delete an event
 @app.route("/events/<int:event_id>", methods=["DELETE"])
 def delete_event(event_id):
-    # TODO: Task 2 - Design and Develop the Code
 
-    # TODO: Task 3 - Implement the Loop and Process Each Element
+    # Find the event
+    for event in events:
 
-    # TODO: Task 4 - Return and Handle Results
-    pass
+        if event.id == event_id:
+
+            # Remove event from the list
+            events.remove(event)
+
+            # Return no content
+            return "", 204
+
+    # Event was not found
+    return jsonify({"error": "Event not found"}), 404
+
 
 if __name__ == "__main__":
     app.run(debug=True)
+
